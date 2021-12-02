@@ -1,15 +1,15 @@
 export default function CalculatorButton({
   action,
   dispatch,
-  digit,
+  title,
   className,
 }) {
   return (
     <button
       className={className}
-      onClick={() => dispatch({ type: action, payload: { digit } })}
+      onClick={() => dispatch({ type: action, payload: { title } })}
     >
-      {digit}
+      {title}
     </button>
   );
 }

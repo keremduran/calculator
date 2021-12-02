@@ -12,7 +12,7 @@ const ACTIONS = {
 
 const CALCULATOR_BUTTONS = [
   { title: "AC", action: ACTIONS.CLEAR, className: "span-two" },
-  { title: "DEL", action: ACTIONS.ADD_DIGIT },
+  { title: "DEL", action: ACTIONS.DELETE_DIGIT },
   { title: "÷", action: ACTIONS.CHOOSE_OPERATION },
   { title: "1", action: ACTIONS.ADD_DIGIT },
   { title: "2", action: ACTIONS.ADD_DIGIT },
@@ -28,13 +28,32 @@ const CALCULATOR_BUTTONS = [
   { title: "-", action: ACTIONS.CHOOSE_OPERATION },
   { title: ".", action: ACTIONS.ADD_DIGIT },
   { title: "0", action: ACTIONS.ADD_DIGIT },
-  { title: "=", action: ACTIONS.ADD_DIGIT, className: "span-two" },
+  { title: "=", action: ACTIONS.EVALUATE, className: "span-two" },
 ];
+
+function formatOperand(operand) {
+  if (operand == null) return;
+
+  const [integer, decimal] = operand.split(".");
+  if (decimal == null) return INTEGER_FORMATTER.format(integer);
+  return `${INTEGER_FORMATTER.format(integer)}.${decimal}`;
+}
+
+const INTEGER_FORMATTER = new Intl.NumberFormat("en-us", {
+  maximumFractionDigits: 0,
+});
 
 function reducer(state, { type, payload }) {
   switch (type) {
     case ACTIONS.ADD_DIGIT:
       let digit = payload.title;
+      if (state.overwrite) {
+        return {
+          ...state,
+          currentOperand: digit,
+          overwrite: false,
+        };
+      }
       if (digit === "0" && state.currentOperand === "0") return state;
 
       if (payload.title === "." && state.currentOperand.includes("."))
@@ -57,11 +76,49 @@ function reducer(state, { type, payload }) {
           currentOperand: null,
         };
       }
+      if (state.currentOperand == null) {
+        return {
+          ...state,
+          operation: payload.title,
+        };
+      }
       return {
         ...state,
         previousOperand: evaluate(state),
-        operation: payload.operation,
+        operation: payload.title,
         currentOperand: null,
+      };
+    case ACTIONS.EVALUATE:
+      if (
+        state.operation == null ||
+        state.currentOperand == null ||
+        state.currentOperand == null
+      ) {
+        return state;
+      }
+      return {
+        ...state,
+        overwrite: true,
+        previousOperand: null,
+        operation: null,
+        currentOperand: evaluate(state),
+      };
+    case ACTIONS.DELETE_DIGIT:
+      if (state.overwrite) {
+        return {
+          ...state,
+          overwrite: false,
+          currentOperand: null,
+        };
+      }
+      if (state.currentOperand == null) return state;
+      if (state.currentOperand.length === 1) {
+        return { ...state, currentOperand: null };
+      }
+
+      return {
+        ...state,
+        currentOperand: state.currentOperand.slice(0, -1),
       };
     case ACTIONS.CLEAR:
       return {};
@@ -100,17 +157,18 @@ function App() {
     <div className="calculator-grid">
       <div className="output">
         <div className="previous-operand">
-          {previousOperand} {operation}
+          {formatOperand(previousOperand)} {operation}
         </div>
-        <div className="current-operand">{currentOperand}</div>
+        <div className="current-operand">{formatOperand(currentOperand)}</div>
       </div>
-      {CALCULATOR_BUTTONS.map((button) => {
+      {CALCULATOR_BUTTONS.map((button, index) => {
         return (
           <CalculatorButton
             title={button.title}
             dispatch={dispatch}
             action={button.action}
             className={button.className}
+            key={`${index}-${button.title}`}
           >
             {button.title}
           </CalculatorButton>

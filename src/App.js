@@ -122,6 +122,8 @@ function reducer(state, { type, payload }) {
       };
     case ACTIONS.CLEAR:
       return {};
+    default:
+      return state;
   }
 }
 
@@ -142,6 +144,8 @@ function evaluate({ currentOperand, previousOperand, operation }) {
       break;
     case "÷":
       computation = prev / current;
+      break;
+    default:
       break;
   }
 

@@ -7,7 +7,7 @@ function App() {
         <div className="previous-operand"></div>
         <div className="current-operand"></div>
       </div>
-      <button className="span-two"></button>
+      <button className="span-two">AC</button>
       <button>DEL</button>
       <button>÷</button>
       <button>1</button>
